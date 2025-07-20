@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 const AdminPanel = () => {
   const [quests, setQuests] = useState([]);
@@ -392,12 +393,20 @@ const AdminPanel = () => {
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold text-gray-800">Quest Admin Panel</h1>
-          <button
-            onClick={handleCreateQuest}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
-          >
-            + Create New Quest
-          </button>
+          <div className="flex gap-3">
+            <Link
+              to="/admin/quests"
+              className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              View All Quests
+            </Link>
+            <button
+              onClick={handleCreateQuest}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+            >
+              + Create New Quest
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
