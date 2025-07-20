@@ -1,5 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
+import { Send, Home, Settings, Link2, Copy } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
 
 const QuestChat = () => {
   const { questId } = useParams();
@@ -35,7 +39,7 @@ const QuestChat = () => {
         setMessages([{
           id: 1,
           type: 'bot',
-          content: `Hey ${questData.userName}! Welcome to "${questData.title}". ${questData.description} Let's begin!`,
+          content: `Welcome ${questData.userName}! Hi ${questData.userName}! Ready to start your adventure?\n${questData.description} Let's begin!`,
           timestamp: new Date()
         }]);
       }
@@ -149,19 +153,14 @@ const QuestChat = () => {
             if (validation.isLastStep) {
               const finalText = quest.finalText.replace(/\{answers\}/g, updatedProgress.answers.join(', '));
               addBotMessage(`🎉 Congratulations! You've completed the quest! ${finalText}`);
-              
-              // Add copy button message
-              setTimeout(() => {
-                addBotMessage('Click the copy button below to copy your final code!');
-              }, 1500);
             } else {
-              addBotMessage('🎯 Correct! Great job!');
+              addBotMessage('Excellent! That\'s exactly right! ✨');
               
               // Show next step
               setTimeout(() => {
                 const nextStep = quest.steps[newStepIndex];
                 if (nextStep) {
-                  addBotMessage(nextStep.message);
+                  addBotMessage(`Perfect! Let's continue ${quest.userName} Great choice! Now, ${nextStep.message}`);
                 }
               }, 1500);
             }
@@ -203,41 +202,43 @@ const QuestChat = () => {
 
   if (!quest) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading quest...</p>
+          <p className="text-slate-600 font-medium">Loading quest...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col">
+    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
+      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 shadow-sm">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button 
+            <Button 
+              variant="ghost" 
+              size="icon"
               onClick={() => window.history.back()}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className="rounded-full hover:bg-slate-100"
             >
-              🏠
-            </button>
+              <Home className="h-5 w-5 text-slate-600" />
+            </Button>
             <div>
-              <h1 className="text-xl font-semibold text-gray-800">{quest.title}</h1>
-              <p className="text-sm text-gray-500">
+              <h1 className="text-xl font-semibold text-slate-800">{quest.title}</h1>
+              <p className="text-sm text-slate-500">
                 Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              ⚙️
-            </button>
-            <button className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              🔗
-            </button>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
+              <Settings className="h-5 w-5 text-slate-600" />
+            </Button>
+            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
+              <Link2 className="h-5 w-5 text-slate-600" />
+            </Button>
           </div>
         </div>
       </div>
@@ -246,31 +247,35 @@ const QuestChat = () => {
       <div className="flex-1 overflow-hidden">
         <div className="max-w-4xl mx-auto h-full flex flex-col">
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
+          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                className={cn(
+                  "flex",
+                  message.type === 'user' ? 'justify-end' : 'justify-start'
+                )}
               >
                 <div
-                  className={`max-w-md px-4 py-3 rounded-2xl ${
+                  className={cn(
+                    "max-w-[70%] px-4 py-3 rounded-2xl shadow-sm",
                     message.type === 'user'
                       ? 'bg-blue-500 text-white rounded-br-md'
-                      : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
-                  }`}
+                      : 'bg-white text-slate-800 border border-slate-200 rounded-bl-md'
+                  )}
                 >
-                  <p className="text-sm leading-relaxed">{message.content}</p>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                 </div>
               </div>
             ))}
             
             {isTyping && (
               <div className="flex justify-start">
-                <div className="bg-white border border-gray-200 max-w-md px-4 py-3 rounded-2xl rounded-bl-md">
+                <div className="bg-white border border-slate-200 max-w-[70%] px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
                   <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
                   </div>
                 </div>
               </div>
@@ -281,41 +286,46 @@ const QuestChat = () => {
 
           {/* Final Code Copy Button */}
           {progress?.completed && (
-            <div className="px-6 py-4 bg-green-50 border-t border-green-200">
-              <button
+            <div className="px-6 py-4 bg-green-50/80 backdrop-blur-sm border-t border-green-200/60">
+              <Button
                 onClick={copyFinalCode}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl transition-colors"
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-sm"
               >
-                📋 Copy Final Code
-              </button>
+                <Copy className="h-4 w-4 mr-2" />
+                Copy Final Code
+              </Button>
             </div>
           )}
 
           {/* Input Area */}
-          <div className="px-6 py-4 bg-white border-t border-gray-200">
-            <div className="flex items-center space-x-3">
+          <div className="px-6 py-6 bg-white/80 backdrop-blur-sm border-t border-slate-200/60">
+            <div className="flex items-end space-x-3">
               <div className="flex-1 relative">
-                <input
-                  type="text"
+                <Input
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your answer..."
-                  className="w-full bg-gray-100 border-0 rounded-2xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:bg-white transition-all text-sm"
+                  className="bg-slate-50 border-slate-200 rounded-2xl px-4 py-3 pr-12 focus:bg-white transition-all text-sm resize-none min-h-[44px]"
                   disabled={isLoading || progress?.completed}
                 />
                 {currentMessage.trim() && (
-                  <button
+                  <Button
                     onClick={handleSendMessage}
                     disabled={isLoading || progress?.completed}
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-purple-500 hover:bg-purple-600 disabled:bg-gray-300 text-white rounded-full flex items-center justify-center transition-colors"
+                    size="icon"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-full shadow-sm"
                   >
-                    {isLoading ? '...' : '→'}
-                  </button>
+                    {isLoading ? (
+                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
                 )}
               </div>
             </div>
-            <p className="text-xs text-gray-400 mt-2 px-2">
+            <p className="text-xs text-slate-400 mt-3 px-2">
               {currentMessage.toLowerCase().includes('hint') || currentMessage.toLowerCase().includes('help') 
                 ? "💡 Getting hint..." 
                 : "Type 'hint' or 'help' for clues"
