@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Settings, Edit3, Trash2, ExternalLink, ArrowUp, ArrowDown, X, Save, Sparkles } from 'lucide-react';
+import { Plus, Settings, Edit3, Trash2, ExternalLink, ArrowUp, ArrowDown, X, Save, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
-const AdminPanel = () => {
+const AdminPanel = ({ onLogout }) => {
   const [quests, setQuests] = useState([]);
   const [selectedQuest, setSelectedQuest] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -167,7 +167,7 @@ const AdminPanel = () => {
 
   if (isEditing) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50">
+      <div className="min-h-screen bg-gradient-to-br ">
         <div className="container mx-auto p-6">
           <Card className="max-w-6xl mx-auto shadow-2xl border-0 overflow-hidden">
             <CardHeader className="bg-gradient-to-r from-violet-600 to-blue-600 text-white">
@@ -189,11 +189,11 @@ const AdminPanel = () => {
               </div>
             </CardHeader>
 
-            <CardContent className="p-8 bg-white">
+            <CardContent className="p-8">
               {/* Quest Basic Info */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
+                  <label className="block text-sm font-bold text-gray-200">
                     Quest Title
                   </label>
                   <Input
@@ -205,7 +205,7 @@ const AdminPanel = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
+                  <label className="block text-sm font-bold text-gray-200">
                     User Name
                   </label>
                   <Input
@@ -217,7 +217,7 @@ const AdminPanel = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
+                  <label className="block text-sm font-bold text-gray-200">
                     AI Guide Name
                   </label>
                   <Input
@@ -229,7 +229,7 @@ const AdminPanel = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-sm font-bold text-gray-700">
+                  <label className="block text-sm font-bold text-gray-200">
                     Password (optional)
                   </label>
                   <Input
@@ -249,13 +249,13 @@ const AdminPanel = () => {
                       onChange={(e) => setQuestForm(prev => ({ ...prev, active: e.target.checked }))}
                       className="w-5 h-5 rounded border-gray-300 text-violet-600 shadow-sm focus:border-violet-300 focus:ring focus:ring-violet-200 focus:ring-opacity-50"
                     />
-                    <span className="ml-3 text-sm font-bold text-gray-700">Active Quest</span>
+                    <span className="ml-3 text-sm font-bold text-gray-200">Active Quest</span>
                   </label>
                 </div>
               </div>
 
               <div className="mb-8 space-y-2">
-                <label className="block text-sm font-bold text-gray-700">
+                <label className="block text-sm font-bold text-gray-200">
                   Description
                 </label>
                 <textarea
@@ -268,7 +268,7 @@ const AdminPanel = () => {
               </div>
 
               <div className="mb-8 space-y-2">
-                <label className="block text-sm font-bold text-gray-700">
+                <label className="block text-sm font-bold text-gray-200">
                   Final Text (use {`{answers}`} to include collected answers)
                 </label>
                 <textarea
@@ -282,14 +282,14 @@ const AdminPanel = () => {
 
               {/* Steps Section */}
               <div className="mb-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
+                <h3 className="text-2xl font-bold text-gray-100 mb-6 flex items-center">
                   <Settings className="h-6 w-6 mr-2 text-violet-600" />
                   Quest Steps
                 </h3>
                 
                 {/* Add New Step Form */}
                 <Card className="mb-6 border-violet-200 shadow-lg">
-                  <CardHeader className="bg-gradient-to-r from-violet-100 to-blue-100">
+                  <CardHeader className="bg-gradient-to-r bg-gray-900">
                     <CardTitle className="text-lg text-violet-800">Add New Step</CardTitle>
                   </CardHeader>
                   <CardContent className="p-6">
@@ -410,14 +410,14 @@ const AdminPanel = () => {
                         </div>
                         
                         <div className="space-y-3 text-sm">
-                          <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                          <p className="text-gray-200 bg-gray-700 p-3 rounded-lg">
                             <span className="font-semibold text-violet-600">Message:</span> {step.message}
                           </p>
-                          <p className="text-gray-700 bg-gray-50 p-3 rounded-lg">
+                          <p className="text-gray-200 bg-gray-700 p-3 rounded-lg">
                             <span className="font-semibold text-blue-600">Expected:</span> {step.expectedAnswer}
                           </p>
                           {step.hint && (
-                            <p className="text-gray-500 bg-yellow-50 p-3 rounded-lg">
+                            <p className="text-gray-500 bg-gray-700 p-3 rounded-lg">
                               <span className="font-semibold text-yellow-600">Hint:</span> {step.hint}
                             </p>
                           )}
@@ -452,7 +452,7 @@ const AdminPanel = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br ">
       <div className="container mx-auto p-6">
         <Card className="max-w-7xl mx-auto shadow-2xl border-0 overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-violet-600 to-blue-600 text-white">
@@ -464,23 +464,30 @@ const AdminPanel = () => {
               <div className="flex gap-3">
                 <Button
                   onClick={handleCreateQuest}
-                  className="bg-white text-violet-600 hover:bg-gray-100 rounded-xl shadow-lg"
+                  className=" text-violet-600 hover:bg-gray-100 rounded-xl shadow-lg"
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Create New Quest
+                </Button>
+                <Button
+                  onClick={onLogout}
+                  className="bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg flex items-center"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
                 </Button>
               </div>
             </div>
           </CardHeader>
 
-          <CardContent className="p-8 bg-white">
+          <CardContent className="p-8">
             {quests.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {quests.map((quest) => (
                   <Card key={quest.id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg overflow-hidden">
-                    <div className="bg-gradient-to-r from-violet-100 to-blue-100 p-4">
+                    <div className="bg-gradient-to-r bg-gray-900 p-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="font-bold text-lg text-gray-800 leading-tight">{quest.title}</h3>
+                        <h3 className="font-bold text-lg text-gray-100 leading-tight">{quest.title}</h3>
                         <Badge className={cn(
                           "text-xs font-medium",
                           quest.active 
@@ -541,10 +548,10 @@ const AdminPanel = () => {
               </div>
             ) : (
               <div className="text-center py-20">
-                <div className="bg-gradient-to-br from-violet-100 to-blue-100 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-lg">
+                <div className="bg-gradient-to-br bg-gray-900 rounded-full w-24 h-24 flex items-center justify-center mx-auto mb-8 shadow-lg">
                   <Settings className="h-12 w-12 text-violet-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-700 mb-4">No quests created yet</h3>
+                <h3 className="text-2xl font-bold text-gray-200 mb-4">No quests created yet</h3>
                 <p className="text-gray-500 mb-8 text-lg">Create your first quest to get started with AI adventures.</p>
                 <Button
                   onClick={handleCreateQuest}

@@ -88,20 +88,11 @@ const ThreadWelcomeSuggestions = () => {
     <div className="mt-3 flex w-full items-stretch justify-center gap-4">
       <ThreadPrimitive.Suggestion
         className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="What is the weather in Tokyo?"
+        prompt="Hello, let's start with a quest"
         method="replace"
         autoSend>
         <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
-          What is the weather in Tokyo?
-        </span>
-      </ThreadPrimitive.Suggestion>
-      <ThreadPrimitive.Suggestion
-        className="hover:bg-muted/80 flex max-w-sm grow basis-0 flex-col items-center justify-center rounded-lg border p-3 transition-colors ease-in"
-        prompt="What is assistant-ui?"
-        method="replace"
-        autoSend>
-        <span className="line-clamp-2 text-ellipsis text-sm font-semibold">
-          What is assistant-ui?
+          Hello, let's start with a quest
         </span>
       </ThreadPrimitive.Suggestion>
     </div>
@@ -130,7 +121,7 @@ const ComposerAction = () => {
           <TooltipIconButton
             tooltip="Send"
             variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in">
+            className="my-2.5 size-8 p-2 px-10 transition-opacity ease-in">
             <SendHorizontalIcon />
           </TooltipIconButton>
         </ComposerPrimitive.Send>
@@ -140,7 +131,7 @@ const ComposerAction = () => {
           <TooltipIconButton
             tooltip="Cancel"
             variant="default"
-            className="my-2.5 size-8 p-2 transition-opacity ease-in">
+            className="my-2.5 size-8 p-2 px-12 transition-opacity ease-in">
             <CircleStopIcon />
           </TooltipIconButton>
         </ComposerPrimitive.Cancel>
@@ -228,7 +219,7 @@ const AssistantActionBar = () => {
       hideWhenRunning
       autohide="not-last"
       autohideFloat="single-branch"
-      className="text-muted-foreground flex gap-1 col-start-3 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm">
+      className="text-muted-foreground flex gap-16 col-start-3 row-start-2 -ml-1 data-[floating]:bg-background data-[floating]:absolute data-[floating]:rounded-md data-[floating]:border data-[floating]:p-1 data-[floating]:shadow-sm">
       <ActionBarPrimitive.Copy asChild>
         <TooltipIconButton tooltip="Copy">
           <MessagePrimitive.If copied>

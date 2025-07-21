@@ -883,7 +883,8 @@ Your personality:
 Rules:
 - If user asks for "hint" or "help", provide guidance without giving the exact answer
 - Keep responses under 150 words unless providing detailed explanations
-- Always maintain the adventure/quest theme`;
+- Always maintain the adventure/quest theme
+- AT THE END OF QUEST, INSERT ALL ANSWERS AS SINGLE LINE, SEPARATED BY COMMAS`;
 
     if (progress.completed) {
       systemPrompt += `\n\nThe quest is COMPLETED! Congratulate the user and offer to help with any questions about their journey.`;

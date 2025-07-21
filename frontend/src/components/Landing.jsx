@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 const Landing = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50">
+    <div className="min-h-screen bg-gradient-to-br ">
       {/* Hero Section */}
       <div className="container mx-auto px-6 py-16">
         <div className="max-w-5xl mx-auto text-center">
@@ -29,7 +29,7 @@ const Landing = () => {
             
             <div className="bg-gradient-to-r from-violet-500 to-blue-500 p-1 rounded-3xl inline-block mb-12 shadow-lg">
               <div className="bg-white rounded-2xl px-8 py-6">
-                <p className="text-gray-700 font-medium flex items-center">
+                <p className="text-gray-200 font-medium flex items-center">
                   <Target className="h-5 w-5 mr-3 text-violet-500" />
                   To start your quest, you'll need a direct link from your adventure guide
                 </p>
@@ -44,7 +44,7 @@ const Landing = () => {
                 <div className="bg-gradient-to-br from-violet-100 to-violet-200 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <MessageCircle className="h-10 w-10 text-violet-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Interactive Chat</h3>
+                <h3 className="text-xl font-bold text-gray-100 mb-4">Interactive Chat</h3>
                 <p className="text-gray-600 leading-relaxed">
                   Engage in natural conversations with AI guides that adapt to your responses and provide real-time feedback.
                 </p>
@@ -56,7 +56,7 @@ const Landing = () => {
                 <div className="bg-gradient-to-br from-blue-100 to-blue-200 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Target className="h-10 w-10 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Personalized Quests</h3>
+                <h3 className="text-xl font-bold text-gray-100 mb-4">Personalized Quests</h3>
                 <p className="text-gray-600 leading-relaxed">
                   Each adventure is tailored to you, with personalized messages and challenges that match your profile.
                 </p>
@@ -68,7 +68,7 @@ const Landing = () => {
                 <div className="bg-gradient-to-br from-emerald-100 to-emerald-200 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-6 shadow-lg">
                   <Zap className="h-10 w-10 text-emerald-600" />
                 </div>
-                <h3 className="text-xl font-bold text-gray-800 mb-4">Instant Results</h3>
+                <h3 className="text-xl font-bold text-gray-100 mb-4">Instant Results</h3>
                 <p className="text-gray-600 leading-relaxed">
                   Complete your quest and receive a unique completion code that you can copy and share instantly.
                 </p>
@@ -78,7 +78,7 @@ const Landing = () => {
 
           {/* How it Works */}
           <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-3xl p-12 mb-16 shadow-xl">
-            <h2 className="text-4xl font-bold text-gray-800 mb-12">How It Works</h2>
+            <h2 className="text-4xl font-bold text-gray-100 mb-12">How It Works</h2>
             
             <div className="grid md:grid-cols-4 gap-8">
               {[
@@ -91,7 +91,7 @@ const Landing = () => {
                   <div className={`bg-gradient-to-br from-${step.color}-500 to-${step.color}-600 text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-6 font-bold text-xl shadow-lg group-hover:scale-110 transition-transform`}>
                     {step.number}
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-3 text-lg">{step.title}</h3>
+                  <h3 className="font-bold text-gray-100 mb-3 text-lg">{step.title}</h3>
                   <p className="text-gray-600 leading-relaxed">{step.desc}</p>
                   {index < 3 && (
                     <ArrowRight className="h-6 w-6 text-gray-400 mx-auto mt-4 hidden md:block" />
@@ -118,7 +118,7 @@ const Landing = () => {
               </div>
             </div>
             <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 max-w-lg mx-auto shadow-xl">
-              <p className="text-gray-700 leading-relaxed font-medium">
+              <p className="text-gray-200 leading-relaxed font-medium">
                 Each quest is unique and created specifically for you. 
                 Ready to begin your adventure?
               </p>

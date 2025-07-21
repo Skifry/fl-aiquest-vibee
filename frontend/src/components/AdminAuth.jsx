@@ -87,7 +87,7 @@ const AdminAuth = ({ children }) => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br  flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-violet-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Checking authentication...</p>
@@ -98,7 +98,7 @@ const AdminAuth = ({ children }) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-violet-50 via-white to-blue-50 flex items-center justify-center p-6">
+      <div className="min-h-screen bg-gradient-to-br  flex items-center justify-center p-6">
         <Card className="w-full max-w-md shadow-2xl border-0 overflow-hidden">
           <CardHeader className="bg-gradient-to-r from-violet-600 to-blue-600 text-white text-center">
             <div className="flex items-center justify-center space-x-3 mb-2">
@@ -109,10 +109,10 @@ const AdminAuth = ({ children }) => {
             <p className="text-violet-100 text-sm">Enter password to access admin panel</p>
           </CardHeader>
 
-          <CardContent className="p-8 bg-white">
+          <CardContent className="p-8">
             <form onSubmit={handleLogin} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-200">
                   Admin Password
                 </label>
                 <div className="relative">
@@ -167,25 +167,8 @@ const AdminAuth = ({ children }) => {
     );
   }
 
-  // If authenticated, render children with logout option
-  return (
-    <div className="relative">
-      {/* Logout button */}
-      <div className="fixed top-[20px] right-[200px] z-50">
-        <Button
-          onClick={handleLogout}
-          variant="outline"
-          size="sm"
-          className="bg-white/90 backdrop-blur-sm hover:bg-white shadow-lg border-gray-200"
-        >
-          <Lock className="h-4 w-4 mr-2" />
-          Logout
-        </Button>
-      </div>
-      
-      {children}
-    </div>
-  );
+  // If authenticated, render children with logout function passed as prop
+  return React.cloneElement(children, { onLogout: handleLogout });
 };
 
 export default AdminAuth;

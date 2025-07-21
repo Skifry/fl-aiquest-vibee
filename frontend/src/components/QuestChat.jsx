@@ -490,7 +490,7 @@ const QuestChat = () => {
 
   if (!quest) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading quest...</p>
@@ -500,14 +500,14 @@ const QuestChat = () => {
   }
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="h-screen flex flex-col">
       {/* Modern Header */}
-      <div className="bg-white border-b border-[#3a3a3a] px-4 py-3 shadow-sm">
+      <div className="bg-background border-b border-[#3a3a3a] px-4 py-3 shadow-sm">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <div>
-                <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+                <h1 className="text-lg font-semibold text-gray-100 flex items-center">
                   <Bot className="h-5 w-5 mr-2 text-violet-500" /> &nbsp;
                   {quest.title}
                 </h1>
