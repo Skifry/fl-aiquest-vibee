@@ -88,7 +88,11 @@ async function loadProgress() {
 // Quest management endpoints
 app.get('/api/quests', async (req, res) => {
   try {
-    const quests = Array.from(storage.quests.values());
+    const quests = Array.from(storage.quests.values()).map(quest => {
+      // Don't expose passwords in response for security
+      const { password, ...questWithoutPassword } = quest;
+      return questWithoutPassword;
+    });
     res.json(quests);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch quests' });
@@ -101,7 +105,10 @@ app.get('/api/quests/:id', async (req, res) => {
     if (!quest) {
       return res.status(404).json({ error: 'Quest not found' });
     }
-    res.json(quest);
+    
+    // Don't expose password in response for security
+    const { password, ...questWithoutPassword } = quest;
+    res.json(questWithoutPassword);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch quest' });
   }
@@ -158,6 +165,36 @@ app.delete('/api/quests/:id', async (req, res) => {
     res.json({ message: 'Quest deleted successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete quest' });
+  }
+});
+
+// Password validation endpoint for protected quests
+app.post('/api/quests/:id/validate-password', async (req, res) => {
+  try {
+    const quest = storage.quests.get(req.params.id);
+    if (!quest) {
+      return res.status(404).json({ error: 'Quest not found' });
+    }
+    
+    const { password } = req.body;
+    
+    // If quest has no password, it's not protected
+    if (!quest.password) {
+      return res.json({ valid: true, protected: false });
+    }
+    
+    // Check if provided password matches
+    const isValid = password === quest.password;
+    
+    if (isValid) {
+      // Don't expose password in response
+      const { password: _, ...questWithoutPassword } = quest;
+      res.json({ valid: true, protected: true, quest: questWithoutPassword });
+    } else {
+      res.json({ valid: false, protected: true });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to validate password' });
   }
 });
 
