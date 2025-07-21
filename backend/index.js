@@ -216,10 +216,10 @@ app.post('/api/progress/:questId', async (req, res) => {
   }
 });
 
-// Chat endpoint for GPT-4 integration
+// Enhanced Chat endpoint for GPT-4 integration
 app.post('/api/chat', async (req, res) => {
   try {
-    const { message, questId, currentStep, context } = req.body;
+    const { message, questId, currentStep, context, isAnswerAttempt } = req.body;
     
     if (!openai) {
       return res.status(500).json({ error: 'OpenAI API not configured' });
@@ -235,22 +235,32 @@ app.post('/api/chat', async (req, res) => {
       return res.status(404).json({ error: 'Step not found' });
     }
     
-    // Build prompt for GPT-4
-    const systemPrompt = `You are a friendly AI quest guide named ${quest.aiName || 'Guide'}. 
-    You are helping ${quest.userName} through an interactive quest.
-    
-    Current step: ${step.message}
-    Expected answer: ${step.expectedAnswer}
-    Hint (if requested): ${step.hint}
-    
-    Rules:
-    - Be encouraging and friendly
-    - Don't reveal the correct answer directly
-    - If user asks for "hint" or "help", provide the hint
-    - If the answer is correct, congratulate and move to next step
-    - If incorrect, encourage them to try again
-    - Keep responses concise and engaging
-    - Always respond in English`;
+    let systemPrompt = `You are ${quest.aiName || 'Guide'}, a friendly and encouraging AI quest guide helping ${quest.userName} through an interactive adventure.
+
+Current Quest: ${quest.title}
+Current Step: ${step.message}
+Expected Answer: ${step.expectedAnswer}
+Available Hint: ${step.hint || 'No specific hint available'}
+
+Your personality:
+- Encouraging and supportive
+- Never reveal answers directly
+- Guide users with hints when they ask for help
+- Celebrate correct answers enthusiastically
+- For wrong answers, encourage them to try again
+- Keep responses conversational and engaging
+- Always stay in character as ${quest.aiName || 'Guide'}
+
+Rules:
+- If user asks for "hint" or "help", provide guidance without giving the exact answer
+- If user seems stuck, offer encouragement and strategic hints
+- If they're close to the answer, acknowledge their progress
+- Keep all responses under 100 words unless providing detailed hints
+- Always maintain the adventure/quest theme`;
+
+    if (isAnswerAttempt) {
+      systemPrompt += `\n\nThe user just submitted: "${message}" as their answer. This is an answer attempt, so respond as if you're checking their answer and providing feedback.`;
+    }
     
     const completion = await openai.chat.completions.create({
       model: "gpt-4",
@@ -258,7 +268,7 @@ app.post('/api/chat', async (req, res) => {
         { role: "system", content: systemPrompt },
         { role: "user", content: message }
       ],
-      max_tokens: 200,
+      max_tokens: 150,
       temperature: 0.7
     });
     
@@ -271,10 +281,14 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// Answer validation endpoint
+// Answer validation endpoint - AI-powered
 app.post('/api/validate-answer', async (req, res) => {
   try {
     const { questId, stepIndex, answer } = req.body;
+    
+    if (!openai) {
+      return res.status(500).json({ error: 'OpenAI API not configured' });
+    }
     
     const quest = storage.quests.get(questId);
     if (!quest) {
@@ -286,15 +300,54 @@ app.post('/api/validate-answer', async (req, res) => {
       return res.status(404).json({ error: 'Step not found' });
     }
     
-    const isCorrect = answer.toLowerCase().trim() === step.expectedAnswer.toLowerCase().trim();
+    // Use AI to validate the answer
+    const validationPrompt = `You are an AI judge evaluating quest answers. 
+    
+Question/Challenge: ${step.message}
+Expected Answer: ${step.expectedAnswer}
+User's Answer: ${answer}
+
+Evaluate if the user's answer is correct or acceptable based on the expected answer. Consider:
+- Exact matches
+- Semantic equivalence (same meaning, different words)
+- Reasonable variations or synonyms
+- Partial credit for close answers
+
+Respond with ONLY "CORRECT" or "INCORRECT" followed by a brief explanation (max 30 words).`;
+
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: [
+        { role: "system", content: "You are a precise answer validator. Respond with CORRECT or INCORRECT followed by a brief explanation." },
+        { role: "user", content: validationPrompt }
+      ],
+      max_tokens: 100,
+      temperature: 0.2
+    });
+    
+    const response = completion.choices[0].message.content.trim();
+    const isCorrect = response.toUpperCase().startsWith('CORRECT');
     
     res.json({ 
       correct: isCorrect,
-      isLastStep: stepIndex === quest.steps.length - 1
+      isLastStep: stepIndex === quest.steps.length - 1,
+      aiResponse: response
     });
     
   } catch (error) {
-    res.status(500).json({ error: 'Failed to validate answer' });
+    console.error('AI validation error:', error);
+    // Fallback to simple comparison if AI fails
+    const step = storage.quests.get(req.body.questId)?.steps[req.body.stepIndex];
+    if (step) {
+      const isCorrect = req.body.answer.toLowerCase().trim() === step.expectedAnswer.toLowerCase().trim();
+      res.json({ 
+        correct: isCorrect,
+        isLastStep: req.body.stepIndex === storage.quests.get(req.body.questId).steps.length - 1,
+        aiResponse: 'AI validation failed, used fallback comparison'
+      });
+    } else {
+      res.status(500).json({ error: 'Failed to validate answer' });
+    }
   }
 });
 

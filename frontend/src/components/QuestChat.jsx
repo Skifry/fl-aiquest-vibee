@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Home, Settings, Link2, Copy, ChevronLeft } from 'lucide-react';
+import { Send, Home, Settings, Link2, Copy, ChevronLeft, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -38,13 +38,49 @@ const QuestChat = () => {
         const questData = await response.json();
         setQuest(questData);
         
-        // Add initial welcome message
-        setMessages([{
-          id: 1,
-          type: 'bot',
-          content: `Welcome ${questData.userName}! Hi ${questData.userName}! Ready to start your adventure?\n${questData.description} Let's begin!`,
-          timestamp: new Date()
-        }]);
+        // Get AI-generated welcome message
+        try {
+          const chatResponse = await fetch('http://localhost:3001/api/chat', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: `Welcome ${questData.userName} to the quest: ${questData.title}. ${questData.description}`,
+              questId,
+              currentStep: 0,
+              context: [],
+              isAnswerAttempt: false
+            })
+          });
+
+          if (chatResponse.ok) {
+            const chatData = await chatResponse.json();
+            setMessages([{
+              id: 1,
+              type: 'bot',
+              content: chatData.message,
+              timestamp: new Date()
+            }]);
+          } else {
+            // Fallback welcome message
+            setMessages([{
+              id: 1,
+              type: 'bot',
+              content: `Welcome ${questData.userName}! Ready to start your adventure?\n${questData.description} Let's begin!`,
+              timestamp: new Date()
+            }]);
+          }
+        } catch (error) {
+          console.error('Failed to get AI welcome message:', error);
+          // Fallback welcome message
+          setMessages([{
+            id: 1,
+            type: 'bot',
+            content: `Welcome ${questData.userName}! Ready to start your adventure?\n${questData.description} Let's begin!`,
+            timestamp: new Date()
+          }]);
+        }
       }
     } catch (error) {
       console.error('Failed to load quest:', error);
@@ -103,20 +139,31 @@ const QuestChat = () => {
     setIsTyping(true);
 
     try {
-      // Check if user is asking for hint
-      if (userMessage.toLowerCase() === 'hint' || userMessage.toLowerCase() === 'help') {
-        const currentStep = quest.steps[progress?.currentStep || 0];
-        if (currentStep?.hint) {
-          setTimeout(() => {
-            addBotMessage(`💡 Hint: ${currentStep.hint}`);
-            setIsTyping(false);
-          }, 1000);
-          setIsLoading(false);
-          return;
-        }
+      // First, get AI response for the user's message
+      const chatResponse = await fetch('http://localhost:3001/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          questId,
+          currentStep: progress?.currentStep || 0,
+          context: messages.slice(-5), // Send last 5 messages for context
+          isAnswerAttempt: true
+        })
+      });
+
+      if (chatResponse.ok) {
+        const chatData = await chatResponse.json();
+        
+        // Add AI response
+        setTimeout(() => {
+          addBotMessage(chatData.message);
+        }, 1000);
       }
 
-      // Validate answer
+      // Then validate the answer using AI
       const validateResponse = await fetch('http://localhost:3001/api/validate-answer', {
         method: 'POST',
         headers: {
@@ -155,32 +202,48 @@ const QuestChat = () => {
           setTimeout(() => {
             if (validation.isLastStep) {
               const finalText = quest.finalText.replace(/\{answers\}/g, updatedProgress.answers.join(', '));
-              addBotMessage(`🎉 Congratulations! You've completed the quest! ${finalText}`);
+              addBotMessage(`🎉 Quest Complete! ${finalText}`);
             } else {
-              addBotMessage('Excellent! That\'s exactly right! ✨');
-              
-              // Show next step
-              setTimeout(() => {
-                const nextStep = quest.steps[newStepIndex];
-                if (nextStep) {
-                  addBotMessage(`Perfect! Let's continue ${quest.userName} Great choice! Now, ${nextStep.message}`);
-                }
-              }, 1500);
+              // Get AI response for next step
+              const nextStep = quest.steps[newStepIndex];
+              if (nextStep) {
+                fetch('http://localhost:3001/api/chat', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    message: `Present the next challenge: ${nextStep.message}`,
+                    questId,
+                    currentStep: newStepIndex,
+                    context: messages.slice(-3),
+                    isAnswerAttempt: false
+                  })
+                }).then(async (res) => {
+                  if (res.ok) {
+                    const data = await res.json();
+                    addBotMessage(data.message);
+                  } else {
+                    addBotMessage(`Great job! Next challenge: ${nextStep.message}`);
+                  }
+                }).catch(() => {
+                  addBotMessage(`Perfect! Now for your next challenge: ${nextStep.message}`);
+                });
+              }
             }
             setIsTyping(false);
-          }, 1000);
+          }, 2000);
         }
       } else {
-        // Wrong answer - encourage to try again
+        // AI determined answer was wrong - its response was already added above
         setTimeout(() => {
-          addBotMessage("Hmm, that's not quite right. Give it another try! 🤔 (Type 'hint' if you need help)");
           setIsTyping(false);
-        }, 1000);
+        }, 1500);
       }
     } catch (error) {
       console.error('Failed to process message:', error);
       setTimeout(() => {
-        addBotMessage('Sorry, something went wrong. Please try again.');
+        addBotMessage('I apologize, but I encountered an issue. Please try again.');
         setIsTyping(false);
       }, 1000);
     }
@@ -230,9 +293,12 @@ const QuestChat = () => {
                 <ChevronLeft className="h-5 w-5 text-gray-600" />
               </Button>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">{quest.title}</h1>
+                <h1 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <Bot className="h-5 w-5 mr-2 text-violet-500" />
+                  {quest.title}
+                </h1>
                 <Badge variant="secondary" className="text-xs">
-                  Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
+                  AI-Powered Quest • Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
                 </Badge>
               </div>
             </div>
@@ -334,7 +400,7 @@ const QuestChat = () => {
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Type your answer..."
+                  placeholder="Type your answer or ask for help..."
                   className="bg-gray-50 border-gray-300 rounded-full px-4 py-3 pr-12 focus:bg-white focus:border-violet-500 transition-all text-sm min-h-[44px]"
                   disabled={isLoading || progress?.completed}
                 />
@@ -355,11 +421,9 @@ const QuestChat = () => {
               </div>
             </div>
             {!progress?.completed && (
-              <p className="text-xs text-gray-500 mt-2 px-4">
-                {currentMessage.toLowerCase().includes('hint') || currentMessage.toLowerCase().includes('help') 
-                  ? "💡 Getting hint..." 
-                  : "Type 'hint' or 'help' for clues"
-                }
+              <p className="text-xs text-gray-500 mt-2 px-4 flex items-center">
+                <Bot className="h-3 w-3 mr-1 text-violet-500" />
+                AI-powered quest assistant • Ask for hints anytime
               </p>
             )}
           </div>
