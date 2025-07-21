@@ -7,7 +7,7 @@ import AdminAuth from './components/AdminAuth';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="dark min-h-screen bg-background text-foreground">
         <Routes>
           <Route path="/" element={<Navigate to="/admin" replace />} />
           <Route path="/quest/:questId" element={<QuestChat />} />

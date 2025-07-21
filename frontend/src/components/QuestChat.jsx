@@ -4,6 +4,8 @@ import { Send, Home, Settings, Link2, Copy, ChevronLeft, Bot, Lock } from 'lucid
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { useLocalRuntime, AssistantRuntimeProvider } from "@assistant-ui/react";
+import { Thread } from "@/components/assistant-ui/thread";
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,10 +38,83 @@ const QuestChat = () => {
     checkQuestAccess();
   }, [questId]);
 
+  // Create ChatModelAdapter for Assistant UI
+  const questModelAdapter = React.useMemo(() => {
+    if (!questId) return null;
+
+    const adapter = {
+      async run({ messages, abortSignal }) {
+        try {
+          const response = await fetch(`http://localhost:3001/api/runtime/${questId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+              messages: messages.map(msg => ({
+                role: msg.role,
+                content: msg.content[0]?.text || msg.content
+              })),
+              abortSignal
+            }),
+            signal: abortSignal
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          // Handle streaming response
+          const reader = response.body?.getReader();
+          if (!reader) {
+            throw new Error('No response body');
+          }
+
+          let fullContent = '';
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            
+            const chunk = decoder.decode(value, { stream: true });
+            fullContent += chunk;
+          }
+
+          return {
+            content: [{ type: 'text', text: fullContent }]
+          };
+        } catch (error) {
+          console.error('Runtime adapter error:', error);
+          return {
+            content: [{ 
+              type: 'text', 
+              text: 'I apologize, but I encountered an issue. Please try again.' 
+            }]
+          };
+        }
+      }
+    };
+
+    return adapter;
+  }, [questId]);
+
+  // Create LocalRuntime
+  const runtime = useLocalRuntime(questModelAdapter, {
+    initialMessages: quest ? [{
+      role: 'assistant',
+      content: [{
+        type: 'text',
+        text: `Welcome to ${quest.title}! I'm ${quest.aiName || 'Guide'}, and I'll be guiding you through this adventure. ${quest.description}`
+      }]
+    }] : []
+  });
+
   const checkQuestAccess = async () => {
     try {
       // First check if quest exists and if it's password protected
-      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}/validate-password`, {
+      const response = await fetch(`http://localhost:3001/api/quests/${questId}/validate-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -75,7 +150,7 @@ const QuestChat = () => {
     setPasswordError('');
 
     try {
-      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}/validate-password`, {
+      const response = await fetch(`http://localhost:3001/api/quests/${questId}/validate-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -106,7 +181,7 @@ const QuestChat = () => {
 
   const loadWelcomeMessage = async (questData) => {
     try {
-      const chatResponse = await fetch('https://quest-back.vercel.app/api/chat', {
+      const chatResponse = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -151,17 +226,19 @@ const QuestChat = () => {
 
   const loadQuest = async () => {
     try {
-      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}`);
+      const response = await fetch(`http://localhost:3001/api/quests/${questId}`);
       if (response.ok) {
         const questData = await response.json();
         setQuest(questData);
-        await loadWelcomeMessage(questData);
         
-        // Show the first step immediately after welcome message
-        if (questData.steps && questData.steps.length > 0) {
-          setTimeout(() => {
-            addBotMessage(questData.steps[0].message, 0, questData);
-          }, 1500);
+        // Load runtime configuration
+        const configResponse = await fetch(`http://localhost:3001/api/runtime/${questId}/config`, {
+          credentials: 'include'
+        });
+        
+        if (configResponse.ok) {
+          const config = await configResponse.json();
+          setProgress(config.progress);
         }
       }
     } catch (error) {
@@ -171,7 +248,7 @@ const QuestChat = () => {
 
   const loadProgress = async () => {
     try {
-      const response = await fetch(`https://quest-back.vercel.app/api/progress/${questId}`, {
+      const response = await fetch(`http://localhost:3001/api/progress/${questId}`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -225,7 +302,7 @@ const QuestChat = () => {
 
     try {
       // First, get AI response for the user's message
-      const chatResponse = await fetch('https://quest-back.vercel.app/api/chat', {
+      const chatResponse = await fetch('http://localhost:3001/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -249,7 +326,7 @@ const QuestChat = () => {
       }
 
       // Then validate the answer using AI
-      const validateResponse = await fetch('https://quest-back.vercel.app/api/validate-answer', {
+      const validateResponse = await fetch('http://localhost:3001/api/validate-answer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -266,7 +343,7 @@ const QuestChat = () => {
       if (validation.correct) {
         // Update progress
         const newStepIndex = (progress?.currentStep || 0) + 1;
-        const updateResponse = await fetch(`https://quest-back.vercel.app/api/progress/${questId}`, {
+        const updateResponse = await fetch(`http://localhost:3001/api/progress/${questId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -294,7 +371,7 @@ const QuestChat = () => {
               // Get AI response for next step
               const nextStep = quest.steps[newStepIndex];
               if (nextStep) {
-                fetch('https://quest-back.vercel.app/api/chat', {
+                fetch('http://localhost:3001/api/chat', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',
@@ -440,77 +517,16 @@ const QuestChat = () => {
         </div>
       </div>
 
-      {/* Chat Messages Area */}
       <div className="flex-1 overflow-hidden" style={{"marginTop": "15px"}}>
         <div className="max-w-4xl mx-auto h-[98%] flex flex-col">
-          <ScrollArea className="flex-1 px-4 py-6">
-            <div className="space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex w-full",
-                    message.type === 'user' ? 'justify-end' : 'justify-start'
-                  )}
-                >
-                  <div className="flex items-start space-x-2 max-w-[75%]">
-                    {message.type === 'bot' && (
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
-                          AI
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
-                      className={cn(
-                        "rounded-2xl shadow-sm",
-                        message.type === 'user'
-                          ? 'bg-violet-500 text-white rounded-md bg-[#3e3e3e] bg ml-auto'
-                          : 'text-gray-800 bg-[#303030] rounded-md'
-                      )} style={{"padding": "10px", "marginLeft": "10px"}}
-                    >
-                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                      {message.type === 'bot' && message.step && (
-                        <MediaRenderer 
-                          type={message.step.type} 
-                          mediaUrl={message.step.mediaUrl}
-                          className="mt-2"
-                        />
-                      )}
-                    </div>
-                    {message.type === 'user' && (
-                      <Avatar className="h-8 w-8 mt-1">
-                        <AvatarFallback className="bg-violet-500 text-white text-xs">
-                          {quest.userName}
-                        </AvatarFallback>
-                      </Avatar>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="flex items-start space-x-2 max-w-[75%]">
-                    <Avatar className="h-8 w-8 mt-1">
-                      <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
-                        AI
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
-                      <div className="flex space-x-1">
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
-            </div>
-          </ScrollArea>
+          {/* Assistant UI Thread with LocalRuntime */}
+          {questModelAdapter && (
+            <AssistantRuntimeProvider runtime={runtime}>
+              <div className="flex-1 px-4">
+                <Thread />
+              </div>
+            </AssistantRuntimeProvider>
+          )}
 
           {/* Final Code Copy Button */}
           {progress?.completed && (
@@ -524,51 +540,6 @@ const QuestChat = () => {
               </Button>
             </div>
           )}
-
-          {/* Modern Input Area */}
-          <div className="px-4 py-4 bg-white border-t border-[#3a3a3a]">
-            <div className="flex items-center space-x-3">
-              <div className="flex-1 relative">
-                <Input
-                  value={currentMessage}
-                  onChange={(e) => setCurrentMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Type your answer or ask for help..."
-                  className="bg-[#3a3a3a] border-none rounded-xl px-4 py-3 pr-12 focus:bg-white focus:border-violet-500 transition-all text-[14px] min-h-[44px] mt-[6px] px-[14px] text-[#d6d6d6]"
-                  disabled={isLoading || progress?.completed}
-                />
-                {currentMessage.trim() && (
-                  // <Button
-                  //   onClick={handleSendMessage}
-                  //   disabled={isLoading || progress?.completed}
-                  //   size="icon"
-                  //   className="absolute right-2 top-1/2 transform  -translate-y-1/2 w-8 h-8 text-white rounded-full shadow-sm"
-                  // >
-                  //   {isLoading ? (
-                  //     <div className="w-3 h-3 rounded-full animate-spin" />
-                  //   ) : (
-                  //     <Send className="h-4 w-4" />
-                  //   )}
-                  // </Button>
-
-                  <button
-                   onClick={handleSendMessage}
-                   disabled={isLoading || progress?.completed}
-                   style={{
-                    "background-color": "transparent",
-                    "border": "none",
-                    "color": "white",
-                    "position": "absolute",
-                    "top": "15px",
-                    "right": "20px"
-                   }}
-                  >
-                    <Send className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
