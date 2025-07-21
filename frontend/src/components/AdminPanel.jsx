@@ -15,6 +15,7 @@ const AdminPanel = () => {
     description: '',
     userName: '',
     aiName: '',
+    password: '',
     finalText: '',
     active: true,
     steps: []
@@ -52,6 +53,7 @@ const AdminPanel = () => {
       description: '',
       userName: '',
       aiName: 'Guide',
+      password: '',
       finalText: 'Congratulations! Your final code is: {answers}',
       active: true,
       steps: []
@@ -207,7 +209,20 @@ const AdminPanel = () => {
                   />
                 </div>
 
-                <div className="flex items-center space-x-3">
+                <div className="space-y-2">
+                  <label className="block text-sm font-bold text-gray-700">
+                    Password (optional)
+                  </label>
+                  <Input
+                    type="password"
+                    value={questForm.password}
+                    onChange={(e) => setQuestForm(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Leave empty for no password protection"
+                    className="h-12 border-gray-300 focus:border-violet-500 focus:ring-violet-500 rounded-xl"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-3 md:col-span-2">
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
