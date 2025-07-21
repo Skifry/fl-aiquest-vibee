@@ -1,8 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Home, Settings, Link2, Copy } from 'lucide-react';
+import { Send, Home, Settings, Link2, Copy, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 
 const QuestChat = () => {
@@ -202,94 +205,120 @@ const QuestChat = () => {
 
   if (!quest) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p className="text-slate-600 font-medium">Loading quest...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading quest...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex flex-col">
-      {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-slate-200/60 px-6 py-4 shadow-sm">
-        <div className="max-w-4xl mx-auto flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => window.history.back()}
-              className="rounded-full hover:bg-slate-100"
-            >
-              <Home className="h-5 w-5 text-slate-600" />
-            </Button>
-            <div>
-              <h1 className="text-xl font-semibold text-slate-800">{quest.title}</h1>
-              <p className="text-sm text-slate-500">
-                Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
-              </p>
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* Modern Header */}
+      <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => window.history.back()}
+                className="h-9 w-9 rounded-full hover:bg-gray-100"
+              >
+                <ChevronLeft className="h-5 w-5 text-gray-600" />
+              </Button>
+              <div>
+                <h1 className="text-lg font-semibold text-gray-900">{quest.title}</h1>
+                <Badge variant="secondary" className="text-xs">
+                  Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
+                </Badge>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-              <Settings className="h-5 w-5 text-slate-600" />
-            </Button>
-            <Button variant="ghost" size="icon" className="rounded-full hover:bg-slate-100">
-              <Link2 className="h-5 w-5 text-slate-600" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-gray-100">
+                <Settings className="h-4 w-4 text-gray-600" />
+              </Button>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-gray-100">
+                <Link2 className="h-4 w-4 text-gray-600" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages Container */}
+      {/* Chat Messages Area */}
       <div className="flex-1 overflow-hidden">
         <div className="max-w-4xl mx-auto h-full flex flex-col">
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-8 space-y-6">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={cn(
-                  "flex",
-                  message.type === 'user' ? 'justify-end' : 'justify-start'
-                )}
-              >
+          <ScrollArea className="flex-1 px-4 py-6">
+            <div className="space-y-4">
+              {messages.map((message) => (
                 <div
+                  key={message.id}
                   className={cn(
-                    "max-w-[70%] px-4 py-3 rounded-2xl shadow-sm",
-                    message.type === 'user'
-                      ? 'bg-blue-500 text-white rounded-br-md'
-                      : 'bg-white text-slate-800 border border-slate-200 rounded-bl-md'
+                    "flex w-full",
+                    message.type === 'user' ? 'justify-end' : 'justify-start'
                   )}
                 >
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-                </div>
-              </div>
-            ))}
-            
-            {isTyping && (
-              <div className="flex justify-start">
-                <div className="bg-white border border-slate-200 max-w-[70%] px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
-                    <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                  <div className="flex items-start space-x-2 max-w-[75%]">
+                    {message.type === 'bot' && (
+                      <Avatar className="h-8 w-8 mt-1">
+                        <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
+                          AI
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    <div
+                      className={cn(
+                        "px-4 py-3 rounded-2xl shadow-sm",
+                        message.type === 'user'
+                          ? 'bg-violet-500 text-white rounded-br-md ml-auto'
+                          : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
+                      )}
+                    >
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                    </div>
+                    {message.type === 'user' && (
+                      <Avatar className="h-8 w-8 mt-1">
+                        <AvatarFallback className="bg-violet-500 text-white text-xs">
+                          {quest.userName.charAt(0).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
                   </div>
                 </div>
-              </div>
-            )}
-            
-            <div ref={messagesEndRef} />
-          </div>
+              ))}
+              
+              {isTyping && (
+                <div className="flex justify-start">
+                  <div className="flex items-start space-x-2 max-w-[75%]">
+                    <Avatar className="h-8 w-8 mt-1">
+                      <AvatarFallback className="bg-violet-100 text-violet-700 text-xs">
+                        AI
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="bg-white border border-gray-200 px-4 py-3 rounded-2xl rounded-bl-md shadow-sm">
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          </ScrollArea>
 
           {/* Final Code Copy Button */}
           {progress?.completed && (
-            <div className="px-6 py-4 bg-green-50/80 backdrop-blur-sm border-t border-green-200/60">
+            <div className="px-4 py-3 bg-green-50 border-t border-green-200">
               <Button
                 onClick={copyFinalCode}
-                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 px-4 rounded-xl transition-all shadow-sm"
+                className="w-full bg-green-500 hover:bg-green-600 text-white font-medium py-3 rounded-xl transition-all shadow-sm"
               >
                 <Copy className="h-4 w-4 mr-2" />
                 Copy Final Code
@@ -297,16 +326,16 @@ const QuestChat = () => {
             </div>
           )}
 
-          {/* Input Area */}
-          <div className="px-6 py-6 bg-white/80 backdrop-blur-sm border-t border-slate-200/60">
-            <div className="flex items-end space-x-3">
+          {/* Modern Input Area */}
+          <div className="px-4 py-4 bg-white border-t border-gray-200">
+            <div className="flex items-center space-x-3">
               <div className="flex-1 relative">
                 <Input
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your answer..."
-                  className="bg-slate-50 border-slate-200 rounded-2xl px-4 py-3 pr-12 focus:bg-white transition-all text-sm resize-none min-h-[44px]"
+                  className="bg-gray-50 border-gray-300 rounded-full px-4 py-3 pr-12 focus:bg-white focus:border-violet-500 transition-all text-sm min-h-[44px]"
                   disabled={isLoading || progress?.completed}
                 />
                 {currentMessage.trim() && (
@@ -314,7 +343,7 @@ const QuestChat = () => {
                     onClick={handleSendMessage}
                     disabled={isLoading || progress?.completed}
                     size="icon"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white rounded-full shadow-sm"
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-violet-500 hover:bg-violet-600 disabled:bg-gray-300 text-white rounded-full shadow-sm"
                   >
                     {isLoading ? (
                       <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
@@ -325,12 +354,14 @@ const QuestChat = () => {
                 )}
               </div>
             </div>
-            <p className="text-xs text-slate-400 mt-3 px-2">
-              {currentMessage.toLowerCase().includes('hint') || currentMessage.toLowerCase().includes('help') 
-                ? "💡 Getting hint..." 
-                : "Type 'hint' or 'help' for clues"
-              }
-            </p>
+            {!progress?.completed && (
+              <p className="text-xs text-gray-500 mt-2 px-4">
+                {currentMessage.toLowerCase().includes('hint') || currentMessage.toLowerCase().includes('help') 
+                  ? "💡 Getting hint..." 
+                  : "Type 'hint' or 'help' for clues"
+                }
+              </p>
+            )}
           </div>
         </div>
       </div>
