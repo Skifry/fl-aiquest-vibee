@@ -275,7 +275,9 @@ const QuestChat = () => {
           // Show success message and next step or completion
           setTimeout(() => {
             if (validation.isLastStep) {
-              const finalText = quest.finalText.replace(/\{answers\}/g, updatedProgress.answers.join(', '));
+              // Fetch expected answers from the quest steps
+              const expectedAnswers = quest.steps.map(step => step.expectedAnswer);
+              const finalText = quest.finalText.replace(/\{answers\}/g, expectedAnswers.join(', '));
               addBotMessage(`🎉 Quest Complete! ${finalText}`);
             } else {
               // Get AI response for next step
@@ -333,8 +335,9 @@ const QuestChat = () => {
   };
 
   const copyFinalCode = () => {
-    if (progress?.answers) {
-      const finalCode = progress.answers.join('-');
+    if (quest?.steps) {
+      const expectedAnswers = quest.steps.map(step => step.expectedAnswer);
+      const finalCode = expectedAnswers.join('-');
       navigator.clipboard.writeText(finalCode);
       addBotMessage('✅ Final code copied to clipboard!');
     }

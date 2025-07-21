@@ -338,7 +338,7 @@ const AdminPanel = () => {
 
                     <Button
                       onClick={handleAddStep}
-                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-md"
+                      className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white rounded-xl shadow-md mt-[10px]"
                     >
                       <Plus className="h-4 w-4 mr-2" />
                       Add Step
@@ -412,9 +412,8 @@ const AdminPanel = () => {
               {/* Save/Cancel Buttons */}
               <div className="flex justify-end space-x-4">
                 <Button
-                  variant="outline"
                   onClick={() => setIsEditing(false)}
-                  className="px-8 py-3 rounded-xl border-gray-300 hover:bg-gray-50"
+                  className="bg-gradient-to-r from-violet-500 to-blue-500 hover:from-violet-600 hover:to-blue-600 text-white px-8 py-3 rounded-xl shadow-lg mr-[5px]"
                 >
                   Cancel
                 </Button>
@@ -441,7 +440,7 @@ const AdminPanel = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center space-x-3">
                 <Sparkles className="h-8 w-8" />
-                <CardTitle className="text-3xl font-bold">Quest Admin Panel</CardTitle>
+                <CardTitle className="text-3xl font-bold">&nbsp;&nbsp;Quest Admin Panel</CardTitle>
               </div>
               <div className="flex gap-3">
                 <Button
@@ -459,7 +458,7 @@ const AdminPanel = () => {
             {quests.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                 {quests.map((quest) => (
-                  <Card key={quest.id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg hover:scale-105 overflow-hidden">
+                  <Card key={quest.id} className="hover:shadow-xl transition-all duration-300 border-0 shadow-lg overflow-hidden">
                     <div className="bg-gradient-to-r from-violet-100 to-blue-100 p-4">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-bold text-lg text-gray-800 leading-tight">{quest.title}</h3>
