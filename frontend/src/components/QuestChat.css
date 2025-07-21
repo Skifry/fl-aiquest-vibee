@@ -1,0 +1,54 @@
+.quest-chat-container {
+  background-color: #111111;
+  padding: 10px;
+}
+
+.message-bubble {
+  background-color: #333333;
+  border-radius: 15px;
+  padding: 10px 15px;
+  max-width: 70%;
+}
+
+.user-message .message-bubble {
+  background-color: #007bff;
+  color: white;
+}
+
+.bot-message .message-bubble {
+  background-color: #444444;
+  color: white;
+}
+
+.message-input-container {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  border-top: 1px solid #333333;
+}
+
+.message-input {
+  flex-grow: 1;
+  border: 1px solid #555555;
+  border-radius: 20px;
+  padding: 10px 15px;
+  background-color: #222222;
+  color: white;
+  margin-right: 10px;
+}
+
+.send-button {
+  background-color: #007bff;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.send-button:hover {
+  background-color: #0056b3;
+}

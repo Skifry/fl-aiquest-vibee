@@ -280,43 +280,24 @@ const QuestChat = () => {
   return (
     <div className="h-screen bg-gray-50 flex flex-col">
       {/* Modern Header */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
+      <div className="bg-white border-b border-[#3a3a3a] px-4 py-3 shadow-sm">
         <div className="max-w-4xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => window.history.back()}
-                className="h-9 w-9 rounded-full hover:bg-gray-100"
-              >
-                <ChevronLeft className="h-5 w-5 text-gray-600" />
-              </Button>
               <div>
                 <h1 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <Bot className="h-5 w-5 mr-2 text-violet-500" />
+                  <Bot className="h-5 w-5 mr-2 text-violet-500" /> &nbsp;
                   {quest.title}
                 </h1>
-                <Badge variant="secondary" className="text-xs">
-                  AI-Powered Quest • Step {(progress?.currentStep || 0) + 1} of {quest.steps.length}
-                </Badge>
               </div>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-gray-100">
-                <Settings className="h-4 w-4 text-gray-600" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-gray-100">
-                <Link2 className="h-4 w-4 text-gray-600" />
-              </Button>
             </div>
           </div>
         </div>
       </div>
 
       {/* Chat Messages Area */}
-      <div className="flex-1 overflow-hidden">
-        <div className="max-w-4xl mx-auto h-full flex flex-col">
+      <div className="flex-1 overflow-hidden" style={{"marginTop": "15px"}}>
+        <div className="max-w-4xl mx-auto h-[98%] flex flex-col">
           <ScrollArea className="flex-1 px-4 py-6">
             <div className="space-y-4">
               {messages.map((message) => (
@@ -337,18 +318,18 @@ const QuestChat = () => {
                     )}
                     <div
                       className={cn(
-                        "px-4 py-3 rounded-2xl shadow-sm",
+                        "rounded-2xl shadow-sm",
                         message.type === 'user'
-                          ? 'bg-violet-500 text-white rounded-br-md ml-auto'
-                          : 'bg-white text-gray-800 border border-gray-200 rounded-bl-md'
-                      )}
+                          ? 'bg-violet-500 text-white rounded-md bg-[#3e3e3e] bg ml-auto'
+                          : 'text-gray-800 bg-[#303030] rounded-md'
+                      )} style={{"padding": "10px", "marginLeft": "10px"}}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
                     </div>
                     {message.type === 'user' && (
                       <Avatar className="h-8 w-8 mt-1">
                         <AvatarFallback className="bg-violet-500 text-white text-xs">
-                          {quest.userName.charAt(0).toUpperCase()}
+                          {quest.userName}
                         </AvatarFallback>
                       </Avatar>
                     )}
@@ -393,7 +374,7 @@ const QuestChat = () => {
           )}
 
           {/* Modern Input Area */}
-          <div className="px-4 py-4 bg-white border-t border-gray-200">
+          <div className="px-4 py-4 bg-white border-t border-[#3a3a3a]">
             <div className="flex items-center space-x-3">
               <div className="flex-1 relative">
                 <Input
@@ -401,31 +382,40 @@ const QuestChat = () => {
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Type your answer or ask for help..."
-                  className="bg-gray-50 border-gray-300 rounded-full px-4 py-3 pr-12 focus:bg-white focus:border-violet-500 transition-all text-sm min-h-[44px]"
+                  className="bg-[#3a3a3a] border-none rounded-xl px-4 py-3 pr-12 focus:bg-white focus:border-violet-500 transition-all text-[14px] min-h-[44px] mt-[6px] px-[14px] text-[#d6d6d6]"
                   disabled={isLoading || progress?.completed}
                 />
                 {currentMessage.trim() && (
-                  <Button
-                    onClick={handleSendMessage}
-                    disabled={isLoading || progress?.completed}
-                    size="icon"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 w-8 h-8 bg-violet-500 hover:bg-violet-600 disabled:bg-gray-300 text-white rounded-full shadow-sm"
+                  // <Button
+                  //   onClick={handleSendMessage}
+                  //   disabled={isLoading || progress?.completed}
+                  //   size="icon"
+                  //   className="absolute right-2 top-1/2 transform  -translate-y-1/2 w-8 h-8 text-white rounded-full shadow-sm"
+                  // >
+                  //   {isLoading ? (
+                  //     <div className="w-3 h-3 rounded-full animate-spin" />
+                  //   ) : (
+                  //     <Send className="h-4 w-4" />
+                  //   )}
+                  // </Button>
+
+                  <button
+                   onClick={handleSendMessage}
+                   disabled={isLoading || progress?.completed}
+                   style={{
+                    "background-color": "transparent",
+                    "border": "none",
+                    "color": "white",
+                    "position": "absolute",
+                    "top": "15px",
+                    "right": "20px"
+                   }}
                   >
-                    {isLoading ? (
-                      <div className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
+                    <Send className="h-4 w-4" />
+                  </button>
                 )}
               </div>
             </div>
-            {!progress?.completed && (
-              <p className="text-xs text-gray-500 mt-2 px-4 flex items-center">
-                <Bot className="h-3 w-3 mr-1 text-violet-500" />
-                AI-powered quest assistant • Ask for hints anytime
-              </p>
-            )}
           </div>
         </div>
       </div>
