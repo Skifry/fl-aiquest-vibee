@@ -833,3 +833,288 @@ if (process.env.NODE_ENV !== 'production') {
 
 // Export for Vercel serverless deployment
 export default app;
+
+// Assistant UI Runtime endpoint for per-quest chat
+app.post('/api/runtime/:questId', async (req, res) => {
+  try {
+    const { questId } = req.params;
+    const { messages, abortSignal } = req.body;
+    
+    if (!openai) {
+      return res.status(500).json({ error: 'OpenAI API not configured' });
+    }
+    
+    const quest = await getQuest(questId);
+    if (!quest) {
+      return res.status(404).json({ error: 'Quest not found' });
+    }
+    
+    const sessionId = req.session.id || req.ip;
+    let progress = await getProgress(sessionId, questId) || {
+      questId,
+      sessionId,
+      currentStep: 0,
+      answers: [],
+      completed: false,
+      startedAt: new Date().toISOString()
+    };
+    
+    // Get the last user message
+    const lastMessage = messages[messages.length - 1];
+    const userMessage = lastMessage?.content || '';
+    
+    // Check if this is an answer attempt
+    const currentStep = quest.steps[progress.currentStep];
+    const isAnswerAttempt = currentStep && userMessage.trim().length > 0 && lastMessage?.role === 'user';
+    
+    let systemPrompt = `You are ${quest.aiName || 'Guide'}, a friendly AI quest guide helping ${quest.userName || 'Adventurer'} through an interactive adventure.
+
+Quest: ${quest.title}
+Description: ${quest.description}
+Current Step: ${progress.currentStep + 1}/${quest.steps.length}
+
+Your personality:
+- Encouraging and supportive
+- Guide users with hints when they struggle
+- Celebrate correct answers enthusiastically
+- Keep responses conversational and engaging
+- Always stay in character as ${quest.aiName || 'Guide'}
+
+Rules:
+- If user asks for "hint" or "help", provide guidance without giving the exact answer
+- Keep responses under 150 words unless providing detailed explanations
+- Always maintain the adventure/quest theme`;
+
+    if (progress.completed) {
+      systemPrompt += `\n\nThe quest is COMPLETED! Congratulate the user and offer to help with any questions about their journey.`;
+    } else if (currentStep) {
+      systemPrompt += `\n\nCurrent Challenge: ${currentStep.message}
+Expected Answer: ${currentStep.expectedAnswer}
+Available Hint: ${currentStep.hint || 'No specific hint available'}
+
+If the user's message looks like an answer attempt, validate it and respond accordingly.`;
+    }
+    
+    // If this looks like an answer attempt, validate it first
+    if (isAnswerAttempt && currentStep && !progress.completed) {
+      try {
+        const validationPrompt = `Evaluate if this answer is correct:
+        
+Question: ${currentStep.message}
+Expected Answer: ${currentStep.expectedAnswer}
+User's Answer: ${userMessage}
+
+Consider exact matches, semantic equivalence, synonyms, and reasonable variations.
+Respond with ONLY "CORRECT" or "INCORRECT".`;
+
+        const validationCompletion = await openai.chat.completions.create({
+          model: "gpt-4",
+          messages: [
+            { role: "system", content: "You are a precise answer validator. Respond with CORRECT or INCORRECT only." },
+            { role: "user", content: validationPrompt }
+          ],
+          max_tokens: 10,
+          temperature: 0.1
+        });
+        
+        const isCorrect = validationCompletion.choices[0].message.content.trim().toUpperCase() === 'CORRECT';
+        
+        if (isCorrect) {
+          // Update progress
+          progress.answers[progress.currentStep] = userMessage;
+          progress.currentStep += 1;
+          progress.updatedAt = new Date().toISOString();
+          
+          if (progress.currentStep >= quest.steps.length) {
+            progress.completed = true;
+            systemPrompt += `\n\nThe user just completed the FINAL step! This is a celebration moment - be very enthusiastic and congratulatory!`;
+          } else {
+            const nextStep = quest.steps[progress.currentStep];
+            systemPrompt += `\n\nThe user just answered CORRECTLY! Celebrate and then present the next challenge: "${nextStep.message}"`;
+          }
+          
+          await saveProgress(sessionId, questId, progress);
+        } else {
+          systemPrompt += `\n\nThe user's answer "${userMessage}" is INCORRECT. Encourage them to try again and offer a gentle hint if appropriate.`;
+        }
+      } catch (validationError) {
+        console.error('Validation error:', validationError);
+        // Continue with regular chat if validation fails
+      }
+    }
+    
+    // Build conversation history for context
+    const conversationMessages = [
+      { role: "system", content: systemPrompt }
+    ];
+    
+    // Add recent messages for context (limit to last 10)
+    const recentMessages = messages.slice(-10);
+    for (const msg of recentMessages) {
+      if (msg.role === 'user' || msg.role === 'assistant') {
+        conversationMessages.push({
+          role: msg.role,
+          content: msg.content
+        });
+      }
+    }
+    
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4",
+      messages: conversationMessages,
+      max_tokens: 200,
+      temperature: 0.7,
+      stream: true
+    });
+    
+    // Set up Server-Sent Events for streaming response (Assistant UI format)
+    res.writeHead(200, {
+      'Content-Type': 'text/plain; charset=utf-8',
+      'Cache-Control': 'no-cache',
+      'Connection': 'keep-alive',
+    });
+    
+    let fullResponse = '';
+    
+    for await (const chunk of completion) {
+      const content = chunk.choices[0]?.delta?.content || '';
+      if (content) {
+        fullResponse += content;
+        res.write(content);
+      }
+      
+      if (chunk.choices[0]?.finish_reason === 'stop') {
+        break;
+      }
+    }
+    
+    res.end();
+    
+  } catch (error) {
+    console.error('Runtime error:', error);
+    res.status(500).json({ error: 'Failed to process message' });
+  }
+});
+
+// Get quest runtime configuration for Assistant UI
+app.get('/api/runtime/:questId/config', async (req, res) => {
+  try {
+    const { questId } = req.params;
+    const quest = await getQuest(questId);
+    
+    if (!quest) {
+      return res.status(404).json({ error: 'Quest not found' });
+    }
+    
+    const sessionId = req.session.id || req.ip;
+    const progress = await getProgress(sessionId, questId) || {
+      questId,
+      sessionId,
+      currentStep: 0,
+      answers: [],
+      completed: false,
+      startedAt: new Date().toISOString()
+    };
+    
+    const currentStep = quest.steps[progress.currentStep];
+    
+    res.json({
+      quest: {
+        id: quest.id,
+        title: quest.title,
+        description: quest.description,
+        aiName: quest.aiName || 'Guide',
+        userName: quest.userName || 'Adventurer'
+      },
+      progress: {
+        currentStep: progress.currentStep,
+        totalSteps: quest.steps.length,
+        completed: progress.completed,
+        answers: progress.answers
+      },
+      currentChallenge: currentStep ? {
+        message: currentStep.message,
+        hint: currentStep.hint,
+        type: currentStep.type || 'text',
+        mediaUrl: currentStep.mediaUrl
+      } : null,
+      initialMessage: progress.currentStep === 0 && progress.answers.length === 0 ? 
+        `Welcome to ${quest.title}! I'm ${quest.aiName || 'Guide'}, and I'll be guiding you through this adventure. ${currentStep ? currentStep.message : 'Let\'s begin!'}` : null
+    });
+  } catch (error) {
+    console.error('Runtime config error:', error);
+    res.status(500).json({ error: 'Failed to get runtime configuration' });
+  }
+});
+
+// Reset quest progress for Assistant UI
+app.post('/api/runtime/:questId/reset', async (req, res) => {
+  try {
+    const { questId } = req.params;
+    const sessionId = req.session.id || req.ip;
+    
+    const resetProgress = {
+      questId,
+      sessionId,
+      currentStep: 0,
+      answers: [],
+      completed: false,
+      startedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    
+    await saveProgress(sessionId, questId, resetProgress);
+    res.json({ success: true, progress: resetProgress });
+  } catch (error) {
+    console.error('Reset progress error:', error);
+    res.status(500).json({ error: 'Failed to reset progress' });
+  }
+});
+
+// Assistant UI compatible thread history endpoint
+app.get('/api/runtime/:questId/history', async (req, res) => {
+  try {
+    const { questId } = req.params;
+    const quest = await getQuest(questId);
+    
+    if (!quest) {
+      return res.status(404).json({ error: 'Quest not found' });
+    }
+    
+    const sessionId = req.session.id || req.ip;
+    const progress = await getProgress(sessionId, questId);
+    
+    // Build conversation history from progress
+    const messages = [];
+    
+    if (progress && progress.answers.length > 0) {
+      for (let i = 0; i < progress.answers.length; i++) {
+        const step = quest.steps[i];
+        if (step) {
+          // Add step challenge as assistant message
+          messages.push({
+            id: `step-${i}`,
+            role: 'assistant',
+            content: [{ type: 'text', text: step.message }],
+            createdAt: new Date().toISOString()
+          });
+          
+          // Add user answer
+          if (progress.answers[i]) {
+            messages.push({
+              id: `answer-${i}`,
+              role: 'user',
+              content: [{ type: 'text', text: progress.answers[i] }],
+              createdAt: new Date().toISOString()
+            });
+          }
+        }
+      }
+    }
+    
+    res.json({ messages });
+  } catch (error) {
+    console.error('History error:', error);
+    res.status(500).json({ error: 'Failed to get conversation history' });
+  }
+});
