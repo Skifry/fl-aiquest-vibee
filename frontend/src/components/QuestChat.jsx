@@ -8,6 +8,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import MediaRenderer from './MediaRenderer';
 
 const QuestChat = () => {
   const { questId } = useParams();
@@ -155,6 +156,13 @@ const QuestChat = () => {
         const questData = await response.json();
         setQuest(questData);
         await loadWelcomeMessage(questData);
+        
+        // Show the first step immediately after welcome message
+        if (questData.steps && questData.steps.length > 0) {
+          setTimeout(() => {
+            addBotMessage(questData.steps[0].message, 0, questData);
+          }, 1500);
+        }
       }
     } catch (error) {
       console.error('Failed to load quest:', error);
@@ -174,7 +182,7 @@ const QuestChat = () => {
         if (progressData.currentStep > 0 && quest) {
           const currentStep = quest.steps[progressData.currentStep];
           if (currentStep) {
-            addBotMessage(currentStep.message);
+            addBotMessage(currentStep.message, progressData.currentStep);
           }
         }
       }
@@ -183,12 +191,15 @@ const QuestChat = () => {
     }
   };
 
-  const addBotMessage = (content) => {
+  const addBotMessage = (content, stepIndex = null, questData = null) => {
+    const sourceQuest = questData || quest;
+    const step = stepIndex !== null && sourceQuest?.steps ? sourceQuest.steps[stepIndex] : null;
     const newMessage = {
       id: Date.now(),
       type: 'bot',
       content,
-      timestamp: new Date()
+      timestamp: new Date(),
+      step: step
     };
     setMessages(prev => [...prev, newMessage]);
   };
@@ -298,12 +309,12 @@ const QuestChat = () => {
                 }).then(async (res) => {
                   if (res.ok) {
                     const data = await res.json();
-                    addBotMessage(data.message);
+                    addBotMessage(data.message, newStepIndex);
                   } else {
-                    addBotMessage(`Great job! Next challenge: ${nextStep.message}`);
+                    addBotMessage(`Great job! Next challenge: ${nextStep.message}`, newStepIndex);
                   }
                 }).catch(() => {
-                  addBotMessage(`Perfect! Now for your next challenge: ${nextStep.message}`);
+                  addBotMessage(`Perfect! Now for your next challenge: ${nextStep.message}`, newStepIndex);
                 });
               }
             }
@@ -459,6 +470,13 @@ const QuestChat = () => {
                       )} style={{"padding": "10px", "marginLeft": "10px"}}
                     >
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+                      {message.type === 'bot' && message.step && (
+                        <MediaRenderer 
+                          type={message.step.type} 
+                          mediaUrl={message.step.mediaUrl}
+                          className="mt-2"
+                        />
+                      )}
                     </div>
                     {message.type === 'user' && (
                       <Avatar className="h-8 w-8 mt-1">
