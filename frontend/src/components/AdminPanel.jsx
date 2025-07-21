@@ -29,16 +29,29 @@ const AdminPanel = () => {
     mediaUrl: ''
   });
 
+  // Helper function to get API base URL
+  const getApiBaseUrl = () => {
+    if (process.env.NODE_ENV === 'production') {
+      return '/api'; // Use relative path in production
+    }
+    return 'http://localhost:3001/api'; // Use localhost in development
+  };
+
   useEffect(() => {
     loadQuests();
   }, []);
 
   const loadQuests = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/quests');
+      const response = await fetch(`${getApiBaseUrl()}/quests`, {
+        credentials: 'include',
+      });
       if (response.ok) {
         const questsData = await response.json();
         setQuests(questsData);
+      } else if (response.status === 401) {
+        // Handle authentication error - this will trigger parent component to re-auth
+        window.location.reload();
       }
     } catch (error) {
       console.error('Failed to load quests:', error);
@@ -69,8 +82,8 @@ const AdminPanel = () => {
   const handleSaveQuest = async () => {
     try {
       const url = selectedQuest 
-        ? `http://localhost:3001/api/quests/${selectedQuest.id}`
-        : 'http://localhost:3001/api/quests';
+        ? `${getApiBaseUrl()}/quests/${selectedQuest.id}`
+        : `${getApiBaseUrl()}/quests`;
       
       const method = selectedQuest ? 'PUT' : 'POST';
       
@@ -79,6 +92,7 @@ const AdminPanel = () => {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body: JSON.stringify(questForm)
       });
 
@@ -86,6 +100,8 @@ const AdminPanel = () => {
         await loadQuests();
         setIsEditing(false);
         setSelectedQuest(null);
+      } else if (response.status === 401) {
+        window.location.reload();
       }
     } catch (error) {
       console.error('Failed to save quest:', error);
@@ -96,12 +112,15 @@ const AdminPanel = () => {
     if (!confirm('Are you sure you want to delete this quest?')) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/quests/${questId}`, {
+      const response = await fetch(`${getApiBaseUrl()}/quests/${questId}`, {
         method: 'DELETE',
+        credentials: 'include',
       });
 
       if (response.ok) {
         await loadQuests();
+      } else if (response.status === 401) {
+        window.location.reload();
       }
     } catch (error) {
       console.error('Failed to delete quest:', error);

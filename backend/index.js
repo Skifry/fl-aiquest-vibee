@@ -3,7 +3,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import session from 'express-session';
 import { v4 as uuidv4 } from 'uuid';
-import OpenAI from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs/promises';
 import path from 'path';
@@ -15,9 +14,14 @@ const app = express();
 // Initialize OpenAI (will be configured when API key is provided)
 let openai = null;
 if (process.env.OPENAI_API_KEY) {
-  openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
+  try {
+    const OpenAI = await import('openai').then(m => m.default);
+    openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    });
+  } catch (error) {
+    console.log('OpenAI module not available, continuing without it');
+  }
 }
 
 // Initialize Supabase client
@@ -432,6 +436,15 @@ async function initializeSampleData() {
   }
 }
 
+// Middleware to check admin authentication
+const requireAdminAuth = (req, res, next) => {
+  if (req.session.adminAuthenticated === true) {
+    next();
+  } else {
+    res.status(401).json({ error: 'Admin authentication required' });
+  }
+};
+
 // Quest management endpoints
 app.get('/api/quests', async (req, res) => {
   try {
@@ -462,7 +475,7 @@ app.get('/api/quests/:id', async (req, res) => {
   }
 });
 
-app.post('/api/quests', async (req, res) => {
+app.post('/api/quests', requireAdminAuth, async (req, res) => {
   try {
     const questId = uuidv4();
     const quest = {
@@ -479,7 +492,7 @@ app.post('/api/quests', async (req, res) => {
   }
 });
 
-app.put('/api/quests/:id', async (req, res) => {
+app.put('/api/quests/:id', requireAdminAuth, async (req, res) => {
   try {
     console.log('PUT /api/quests/:id called with ID:', req.params.id);
     console.log('Request body:', req.body);
@@ -511,7 +524,7 @@ app.put('/api/quests/:id', async (req, res) => {
   }
 });
 
-app.delete('/api/quests/:id', async (req, res) => {
+app.delete('/api/quests/:id', requireAdminAuth, async (req, res) => {
   try {
     const questId = req.params.id;
     const quest = await getQuest(questId);
@@ -744,6 +757,48 @@ Respond with ONLY "CORRECT" or "INCORRECT" followed by a brief explanation (max 
     } else {
       res.status(500).json({ error: 'Failed to validate answer' });
     }
+  }
+});
+
+// Admin authentication endpoints
+app.post('/api/admin/authenticate', (req, res) => {
+  try {
+    const { password } = req.body;
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      return res.status(500).json({ error: 'Admin password not configured' });
+    }
+
+    if (password === adminPassword) {
+      req.session.adminAuthenticated = true;
+      res.json({ success: true, message: 'Authentication successful' });
+    } else {
+      res.status(401).json({ success: false, error: 'Invalid password' });
+    }
+  } catch (error) {
+    console.error('Admin authentication error:', error);
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+app.get('/api/admin/check', (req, res) => {
+  try {
+    const isAuthenticated = req.session.adminAuthenticated === true;
+    res.json({ authenticated: isAuthenticated });
+  } catch (error) {
+    console.error('Admin check error:', error);
+    res.status(500).json({ error: 'Failed to check authentication' });
+  }
+});
+
+app.post('/api/admin/logout', (req, res) => {
+  try {
+    req.session.adminAuthenticated = false;
+    res.json({ success: true, message: 'Logged out successfully' });
+  } catch (error) {
+    console.error('Admin logout error:', error);
+    res.status(500).json({ error: 'Logout failed' });
   }
 });
 
