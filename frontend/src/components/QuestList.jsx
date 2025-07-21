@@ -15,7 +15,7 @@ const QuestList = () => {
 
   const loadQuests = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/quests');
+      const response = await fetch('https://quest-back.vercel.app/api/quests');
       if (response.ok) {
         const questsData = await response.json();
         setQuests(questsData);

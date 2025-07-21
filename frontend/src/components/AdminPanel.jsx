@@ -32,7 +32,7 @@ const AdminPanel = () => {
   // Helper function to get API base URL
   const getApiBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-      return '/api'; // Use relative path in production
+      return 'https://quest-back.vercel.app/api'; // Use relative path in production
     }
     return 'http://localhost:3001/api'; // Use localhost in development
   };

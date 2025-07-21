@@ -15,7 +15,7 @@ const AdminAuth = ({ children }) => {
   // Helper function to get API base URL
   const getApiBaseUrl = () => {
     if (process.env.NODE_ENV === 'production') {
-      return '/api'; // Use relative path in production
+      return 'https://quest-back.vercel.app/api'; // Use relative path in production
     }
     return 'http://localhost:3001/api'; // Use localhost in development
   };
@@ -171,7 +171,7 @@ const AdminAuth = ({ children }) => {
   return (
     <div className="relative">
       {/* Logout button */}
-      <div className="fixed top-4 right-4 z-50">
+      <div className="fixed top-[20px] right-[200px] z-50">
         <Button
           onClick={handleLogout}
           variant="outline"
