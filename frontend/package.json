@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@copilotkit/react-core": "^1.9.3",
+    "@copilotkit/react-textarea": "^1.9.3",
+    "@copilotkit/react-ui": "^1.9.3",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-scroll-area": "^1.2.9",
     "@radix-ui/react-slot": "^1.2.3",

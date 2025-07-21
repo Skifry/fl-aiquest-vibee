@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Settings, Edit3, Trash2, ExternalLink, ArrowUp, ArrowDown, X, Save, Eye, Sparkles } from 'lucide-react';
+import { Plus, Settings, Edit3, Trash2, ExternalLink, ArrowUp, ArrowDown, X, Save, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -430,12 +429,6 @@ const AdminPanel = () => {
                 <CardTitle className="text-3xl font-bold">Quest Admin Panel</CardTitle>
               </div>
               <div className="flex gap-3">
-                <Link to="/admin/quests">
-                  <Button variant="secondary" className="bg-white/20 text-white border-white/30 hover:bg-white/30 rounded-xl">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View All Quests
-                  </Button>
-                </Link>
                 <Button
                   onClick={handleCreateQuest}
                   className="bg-white text-violet-600 hover:bg-gray-100 rounded-xl shadow-lg"
