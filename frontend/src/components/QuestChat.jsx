@@ -45,7 +45,7 @@ const QuestChat = () => {
     const adapter = {
       async run({ messages, abortSignal }) {
         try {
-          const response = await fetch(`http://localhost:3001/api/runtime/${questId}`, {
+          const response = await fetch(`https://quest-back.vercel.app/api/runtime/${questId}`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ const QuestChat = () => {
   const checkQuestAccess = async () => {
     try {
       // First check if quest exists and if it's password protected
-      const response = await fetch(`http://localhost:3001/api/quests/${questId}/validate-password`, {
+      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}/validate-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -150,7 +150,7 @@ const QuestChat = () => {
     setPasswordError('');
 
     try {
-      const response = await fetch(`http://localhost:3001/api/quests/${questId}/validate-password`, {
+      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}/validate-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ const QuestChat = () => {
 
   const loadWelcomeMessage = async (questData) => {
     try {
-      const chatResponse = await fetch('http://localhost:3001/api/chat', {
+      const chatResponse = await fetch('https://quest-back.vercel.app/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -226,13 +226,13 @@ const QuestChat = () => {
 
   const loadQuest = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/quests/${questId}`);
+      const response = await fetch(`https://quest-back.vercel.app/api/quests/${questId}`);
       if (response.ok) {
         const questData = await response.json();
         setQuest(questData);
         
         // Load runtime configuration
-        const configResponse = await fetch(`http://localhost:3001/api/runtime/${questId}/config`, {
+        const configResponse = await fetch(`https://quest-back.vercel.app/api/runtime/${questId}/config`, {
           credentials: 'include'
         });
         
@@ -248,7 +248,7 @@ const QuestChat = () => {
 
   const loadProgress = async () => {
     try {
-      const response = await fetch(`http://localhost:3001/api/progress/${questId}`, {
+      const response = await fetch(`https://quest-back.vercel.app/api/progress/${questId}`, {
         credentials: 'include'
       });
       if (response.ok) {
@@ -302,7 +302,7 @@ const QuestChat = () => {
 
     try {
       // First, get AI response for the user's message
-      const chatResponse = await fetch('http://localhost:3001/api/chat', {
+      const chatResponse = await fetch('https://quest-back.vercel.app/api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -326,7 +326,7 @@ const QuestChat = () => {
       }
 
       // Then validate the answer using AI
-      const validateResponse = await fetch('http://localhost:3001/api/validate-answer', {
+      const validateResponse = await fetch('https://quest-back.vercel.app/api/validate-answer', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -343,7 +343,7 @@ const QuestChat = () => {
       if (validation.correct) {
         // Update progress
         const newStepIndex = (progress?.currentStep || 0) + 1;
-        const updateResponse = await fetch(`http://localhost:3001/api/progress/${questId}`, {
+        const updateResponse = await fetch(`https://quest-back.vercel.app/api/progress/${questId}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -371,7 +371,7 @@ const QuestChat = () => {
               // Get AI response for next step
               const nextStep = quest.steps[newStepIndex];
               if (nextStep) {
-                fetch('http://localhost:3001/api/chat', {
+                fetch('https://quest-back.vercel.app/api/chat', {
                   method: 'POST',
                   headers: {
                     'Content-Type': 'application/json',

@@ -17,7 +17,7 @@ const AdminAuth = ({ children }) => {
     if (process.env.NODE_ENV === 'production') {
       return 'https://quest-back.vercel.app/api'; // Use relative path in production
     }
-    return 'http://localhost:3001/api'; // Use localhost in development
+    return 'https://quest-back.vercel.app/api'; // Use localhost in development
   };
 
   // Check authentication status on mount
